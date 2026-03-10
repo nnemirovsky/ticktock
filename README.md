@@ -25,8 +25,16 @@ Session start:
 
 ## Installation
 
+From the CLI:
 ```bash
-claude plugin add nnemirovsky/ticktock
+claude plugin marketplace add nnemirovsky/ticktock
+claude plugin install ticktock
+```
+
+Or interactively inside Claude Code:
+```
+/plugin marketplace add nnemirovsky/ticktock
+/plugin install ticktock
 ```
 
 ## Configuration
