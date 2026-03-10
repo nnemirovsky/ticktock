@@ -1,0 +1,15 @@
+{
+  "name": "ticktock",
+  "version": "0.1.0",
+  "description": "Time awareness for Claude Code — injects timestamps and elapsed time into context via hooks",
+  "owner": {
+    "name": "nnemirovsky"
+  },
+  "plugins": [
+    {
+      "name": "ticktock",
+      "source": "./",
+      "description": "Time awareness for Claude Code — injects timestamps and elapsed time into context via hooks"
+    }
+  ]
+}
