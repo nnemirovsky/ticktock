@@ -1,6 +1,7 @@
 ---
 name: ticktock
 description: Configure ticktock time awareness plugin — toggle hooks on/off, set elapsed threshold
+argument-hint: '[on|off|threshold <seconds>|hook <name> on|off]'
 ---
 
 # ticktock Configuration
@@ -16,7 +17,16 @@ If no arguments (just `/ticktock`):
 ```bash
 cat ~/.claude/ticktock.json 2>/dev/null || echo "No config found — ticktock will use defaults"
 ```
-Display the result in a readable format.
+Display the result in a readable table format, followed by available commands:
+
+```
+Commands:
+  /ticktock                        Show current config
+  /ticktock on|off                 Enable/disable all hooks
+  /ticktock threshold <seconds>    Set elapsed time threshold
+  /ticktock hook <name> on|off     Toggle individual hook
+                                   (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse)
+```
 
 ### Enable/disable all
 `/ticktock on` or `/ticktock off`:
