@@ -93,6 +93,102 @@ _ticktock_offset_to_display() {
   echo "$display"
 }
 
+# Normalize an IANA timezone name to its correctly-cased form by walking /usr/share/zoneinfo/.
+# Uses iterative ls + grep -ix on each path component for case-insensitive matching.
+# Args: $1 = IANA timezone name (e.g. "america/new_york")
+# Output: correctly-cased name on stdout (e.g. "America/New_York")
+# Returns: 0 on success, 1 if not found
+ticktock_normalize_iana() {
+  local input="$1"
+  local zoneinfo="/usr/share/zoneinfo"
+
+  # Split input on "/" into components
+  local IFS="/"
+  local -a parts
+  read -ra parts <<< "$input"
+
+  local base="$zoneinfo"
+  for part in "${parts[@]}"; do
+    local match
+    match=$(ls "$base" 2>/dev/null | grep -ix "$part" | head -1)
+    if [ -z "$match" ]; then
+      echo "unknown timezone: ${input}" >&2
+      return 1
+    fi
+    base="${base}/${match}"
+  done
+
+  # Must resolve to a file (not a directory)
+  if [ ! -f "$base" ]; then
+    echo "unknown timezone: ${input}" >&2
+    return 1
+  fi
+
+  # Strip the zoneinfo prefix to get the normalized IANA name
+  echo "${base#${zoneinfo}/}"
+  return 0
+}
+
+# Validate and normalize a timezone value.
+# For IANA names: case-insensitive lookup in /usr/share/zoneinfo/
+# For UTC offsets: validate format and range (-12 to +14)
+# For "auto": pass through as-is
+# Args: $1 = timezone value to validate
+# Output: normalized value on stdout
+# Returns: 0 on success, 1 with error message on stderr
+ticktock_validate_timezone() {
+  local input="$1"
+
+  # Handle "auto" as a special value
+  if [ "$input" = "auto" ]; then
+    echo "auto"
+    return 0
+  fi
+
+  # Check if it's a UTC offset (case-insensitive)
+  local input_upper
+  input_upper=$(echo "$input" | tr '[:lower:]' '[:upper:]')
+  if [[ "$input_upper" =~ ^UTC([+-])([0-9]{1,2})(:[0-9]{2})?$ ]]; then
+    local sign="${BASH_REMATCH[1]}"
+    local hours="${BASH_REMATCH[2]}"
+    local frac="${BASH_REMATCH[3]}"
+
+    # Validate hour range: -12 to +14
+    local hour_val=$((10#$hours))
+    if [ "$sign" = "-" ] && [ "$hour_val" -gt 12 ]; then
+      echo "invalid UTC offset: ${input} (range is UTC-12 to UTC+14)" >&2
+      return 1
+    fi
+    if [ "$sign" = "+" ] && [ "$hour_val" -gt 14 ]; then
+      echo "invalid UTC offset: ${input} (range is UTC-12 to UTC+14)" >&2
+      return 1
+    fi
+
+    # Validate minutes if present
+    if [ -n "$frac" ]; then
+      local min_val=$((10#${frac#:}))
+      if [ "$min_val" -ge 60 ]; then
+        echo "invalid UTC offset minutes: ${input}" >&2
+        return 1
+      fi
+    fi
+
+    # Normalize: uppercase UTC, keep original sign/numbers
+    echo "UTC${sign}${hours}${frac}"
+    return 0
+  fi
+
+  # Check if input looks like a bad UTC offset (starts with UTC+/- but didn't match valid regex)
+  # Plain "UTC" without a sign falls through to IANA lookup since /usr/share/zoneinfo/UTC exists
+  if [[ "$input_upper" =~ ^UTC[+-] ]]; then
+    echo "invalid UTC offset format: ${input} (expected UTC+N, UTC-N, UTC+N:MM, or UTC-N:MM)" >&2
+    return 1
+  fi
+
+  # Try to normalize as an IANA timezone name
+  ticktock_normalize_iana "$input"
+}
+
 # Resolve configured timezone to a UTC offset display string (e.g. "UTC-7", "UTC+5:30")
 # Uses the config timezone value to determine what to display.
 # Output: display string like "UTC-7" or "UTC+5:30", or empty if resolution fails

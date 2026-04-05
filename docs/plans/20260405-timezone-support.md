@@ -150,19 +150,19 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 **Files:**
 - Modify: `hooks/handlers/common.sh`
 
-- [ ] Add `ticktock_validate_timezone()` function that validates and normalizes a timezone value
-  - For IANA names: case-insensitive lookup in `/usr/share/zoneinfo/` using `find -ipath`
+- [x] Add `ticktock_validate_timezone()` function that validates and normalizes a timezone value
+  - For IANA names: case-insensitive lookup in `/usr/share/zoneinfo/` using iterative `ls | grep -ix` per path component
   - For UTC offsets: validate format and range (-12 to +14)
   - Returns 0 with normalized value on stdout, or returns 1 with error message on stderr
-  - Handle multiple zoneinfo matches by preferring shortest path
-- [ ] Add `ticktock_normalize_iana()` helper to find correct casing from zoneinfo
-- [ ] Test valid IANA: `America/New_York` -> returns 0, outputs `America/New_York`
-- [ ] Test case-insensitive IANA: `america/new_york` -> returns 0, outputs `America/New_York`
-- [ ] Test invalid IANA: `Fake/City` -> returns 1, error on stderr
-- [ ] Test valid UTC offset: `UTC+5:30` -> returns 0, outputs `UTC+5:30`
-- [ ] Test invalid UTC offset: `UTC+25` -> returns 1, error on stderr
-- [ ] Test case-insensitive UTC: `utc+3` -> returns 0, outputs `UTC+3`
-- [ ] Run tests: all validation cases must pass before next task
+  - Handle multiple zoneinfo matches by preferring shortest path (grep -ix + head -1)
+- [x] Add `ticktock_normalize_iana()` helper to find correct casing from zoneinfo
+- [x] Test valid IANA: `America/New_York` -> returns 0, outputs `America/New_York`
+- [x] Test case-insensitive IANA: `america/new_york` -> returns 0, outputs `America/New_York`
+- [x] Test invalid IANA: `Fake/City` -> returns 1, error on stderr
+- [x] Test valid UTC offset: `UTC+5:30` -> returns 0, outputs `UTC+5:30`
+- [x] Test invalid UTC offset: `UTC+25` -> returns 1, error on stderr
+- [x] Test case-insensitive UTC: `utc+3` -> returns 0, outputs `UTC+3`
+- [x] Run tests: all validation cases must pass before next task
 
 ### Task 4: Update default config template
 
