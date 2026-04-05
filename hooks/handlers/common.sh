@@ -54,6 +54,115 @@ ticktock_threshold() {
   jq -r ".thresholdSeconds // ${TICKTOCK_DEFAULT_THRESHOLD}" "$TICKTOCK_CONFIG" 2>/dev/null || echo "$TICKTOCK_DEFAULT_THRESHOLD"
 }
 
+# Check if timezone display is enabled (default: true)
+ticktock_show_timezone() {
+  ticktock_ensure_config
+  local val
+  val=$(jq -r 'if has("showTimezone") then .showTimezone else true end' "$TICKTOCK_CONFIG" 2>/dev/null || echo "true")
+  [ "$val" = "true" ]
+}
+
+# Get configured timezone value (default: "auto")
+ticktock_timezone() {
+  ticktock_ensure_config
+  jq -r '.timezone // "auto"' "$TICKTOCK_CONFIG" 2>/dev/null || echo "auto"
+}
+
+# Convert a +HHMM / -HHMM offset string from `date +%z` to a display string like UTC-7 or UTC+5:30
+# Args: $1 = offset string (e.g. "+0530", "-0700")
+# Output: display string (e.g. "UTC+5:30", "UTC-7")
+_ticktock_offset_to_display() {
+  local raw="$1"
+  local sign="${raw:0:1}"
+  local hh="${raw:1:2}"
+  local mm="${raw:3:2}"
+
+  # Remove leading zeros from hours
+  local hours=$((10#$hh))
+  local minutes=$((10#$mm))
+
+  if [ "$hours" -eq 0 ] && [ "$minutes" -eq 0 ]; then
+    echo "UTC"
+    return
+  fi
+
+  local display="UTC${sign}${hours}"
+  if [ "$minutes" -gt 0 ]; then
+    display="${display}:$(printf '%02d' "$minutes")"
+  fi
+  echo "$display"
+}
+
+# Resolve configured timezone to a UTC offset display string (e.g. "UTC-7", "UTC+5:30")
+# Uses the config timezone value to determine what to display.
+# Output: display string like "UTC-7" or "UTC+5:30", or empty if resolution fails
+ticktock_resolve_tz_offset() {
+  local tz_config
+  tz_config=$(ticktock_timezone)
+
+  local raw_offset
+
+  if [ "$tz_config" = "auto" ]; then
+    # Auto-detect from system
+    raw_offset=$(date +%z)
+    _ticktock_offset_to_display "$raw_offset"
+    return
+  fi
+
+  # Check if it's a UTC offset (case-insensitive match for UTC+N / UTC-N)
+  local tz_upper
+  tz_upper=$(echo "$tz_config" | tr '[:lower:]' '[:upper:]')
+  if [[ "$tz_upper" =~ ^UTC([+-])([0-9]+)(:[0-9]{2})?$ ]]; then
+    # Already in display format, just normalize casing
+    echo "$tz_config" | sed 's/^[uU][tT][cC]/UTC/'
+    return
+  fi
+
+  # Assume IANA timezone name
+  raw_offset=$(TZ="$tz_config" date +%z 2>/dev/null) || {
+    echo ""
+    return
+  }
+  _ticktock_offset_to_display "$raw_offset"
+}
+
+# Return the TZ value to use with date commands.
+# For "auto": returns empty string (use system default)
+# For IANA names: returns the name directly (e.g. "America/New_York")
+# For UTC offsets: applies POSIX sign inversion (user UTC+3 -> POSIX UTC-3)
+# Output: TZ-compatible string, or empty for system default
+ticktock_tz_value() {
+  local tz_config
+  tz_config=$(ticktock_timezone)
+
+  if [ "$tz_config" = "auto" ]; then
+    echo ""
+    return
+  fi
+
+  # Check if it's a UTC offset
+  local tz_upper
+  tz_upper=$(echo "$tz_config" | tr '[:lower:]' '[:upper:]')
+  if [[ "$tz_upper" =~ ^UTC([+-])([0-9]+)(:[0-9]{2})?$ ]]; then
+    local sign="${BASH_REMATCH[1]}"
+    local num="${BASH_REMATCH[2]}"
+    local frac="${BASH_REMATCH[3]}"
+    # POSIX TZ sign inversion: user UTC+3 means 3 hours ahead of UTC,
+    # but POSIX defines positive as west-of-UTC, so we invert the sign.
+    local posix_sign
+    if [ "$sign" = "+" ]; then
+      posix_sign="-"
+    else
+      posix_sign="+"
+    fi
+    echo "UTC${posix_sign}${num}${frac}"
+    return
+  fi
+
+  # IANA name: return as-is
+  echo "$tz_config"
+}
+
 # Get temp file path for storing last timestamp
 ticktock_temp_file() {
   local session_id="${CLAUDE_SESSION_ID:-default}"

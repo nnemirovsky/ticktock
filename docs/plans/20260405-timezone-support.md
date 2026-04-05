@@ -112,20 +112,20 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 **Files:**
 - Modify: `hooks/handlers/common.sh`
 
-- [ ] Add `ticktock_show_timezone()` function to read `showTimezone` from config (default: `true`)
-- [ ] Add `ticktock_timezone()` function to read `timezone` from config (default: `"auto"`)
-- [ ] Add `ticktock_resolve_tz_offset()` function that resolves configured timezone to a `UTC[+-]N` display string
+- [x] Add `ticktock_show_timezone()` function to read `showTimezone` from config (default: `true`)
+- [x] Add `ticktock_timezone()` function to read `timezone` from config (default: `"auto"`)
+- [x] Add `ticktock_resolve_tz_offset()` function that resolves configured timezone to a `UTC[+-]N` display string
   - `"auto"` -> run `date +%z`, convert `+HHMM`/`-HHMM` to `UTC-7` or `UTC+5:30`
   - IANA name -> `TZ=<name> date +%z`, convert similarly
   - UTC offset -> parse and return as-is (already in display format)
-- [ ] Add `ticktock_tz_value()` helper that returns the timezone identifier for use as `TZ="$(ticktock_tz_value)" date ...` (empty string for auto/system)
+- [x] Add `ticktock_tz_value()` helper that returns the timezone identifier for use as `TZ="$(ticktock_tz_value)" date ...` (empty string for auto/system)
   - For IANA names: return the name directly (e.g. `America/New_York`)
   - For UTC offsets: apply POSIX TZ sign inversion (user's `UTC+3` -> POSIX `UTC-3`) since POSIX defines west-of-UTC as positive
-- [ ] Implement and verify POSIX TZ sign inversion in `ticktock_tz_value()`: test that `UTC+3` input produces times 3 hours ahead of UTC (not behind)
-- [ ] Test auto mode: run handler with `timezone: "auto"`, verify output matches system `date +%z` formatted as UTC offset
-- [ ] Test IANA mode: set `timezone: "America/New_York"` in config, run handler, verify offset matches expected value for that zone
-- [ ] Test UTC offset mode: set `timezone: "UTC+5:30"` in config, verify output shows `UTC+5:30` and time is shifted correctly
-- [ ] Test defaults: verify missing `showTimezone`/`timezone` fields default to `true`/`"auto"` with a clean config
+- [x] Implement and verify POSIX TZ sign inversion in `ticktock_tz_value()`: test that `UTC+3` input produces times 3 hours ahead of UTC (not behind)
+- [x] Test auto mode: run handler with `timezone: "auto"`, verify output matches system `date +%z` formatted as UTC offset
+- [x] Test IANA mode: set `timezone: "America/New_York"` in config, run handler, verify offset matches expected value for that zone
+- [x] Test UTC offset mode: set `timezone: "UTC+5:30"` in config, verify output shows `UTC+5:30` and time is shifted correctly
+- [x] Test defaults: verify missing `showTimezone`/`timezone` fields default to `true`/`"auto"` with a clean config
 
 ### Task 2: Integrate timezone into timestamp output
 
