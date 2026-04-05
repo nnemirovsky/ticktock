@@ -10,17 +10,22 @@ ticktock is a Claude Code plugin that injects timestamps into Claude's context v
 
 Below threshold (rapid interaction):
 ```
-[14:32:15]
+[14:32:15 UTC-7]
 ```
 
 Above threshold (gap exceeded 30s):
 ```
-[14:32:15 | +3m25s]
+[14:32:15 UTC-7 | +3m25s]
 ```
 
 Session start:
 ```
-[Session started: 2026-03-10 14:30:00]
+[Session started: 2026-04-05 14:30:00 UTC-7]
+```
+
+With timezone display disabled (`/ticktock tz off`):
+```
+[14:32:15]
 ```
 
 ## Installation
@@ -50,9 +55,14 @@ ticktock stores its configuration at `~/.claude/ticktock.json`. A default config
     "PreToolUse": true,
     "PostToolUse": true
   },
-  "thresholdSeconds": 30
+  "thresholdSeconds": 30,
+  "showTimezone": true,
+  "timezone": "auto"
 }
 ```
+
+- `showTimezone`: whether to append timezone offset to timestamps (default: `true`)
+- `timezone`: timezone to use. `"auto"` detects from system. Also accepts IANA names (`America/New_York`) or UTC offsets (`UTC+3`, `UTC-5:30`). Case-insensitive.
 
 ### Slash commands
 
@@ -63,6 +73,10 @@ ticktock stores its configuration at `~/.claude/ticktock.json`. A default config
 | `/ticktock off` | Disable ticktock |
 | `/ticktock threshold <seconds>` | Set elapsed time threshold |
 | `/ticktock hook <name> on\|off` | Toggle an individual hook |
+| `/ticktock tz` | Show current timezone setting |
+| `/ticktock tz <timezone>` | Set timezone (IANA name or UTC offset) |
+| `/ticktock tz auto` | Revert to system timezone auto-detection |
+| `/ticktock tz on\|off` | Show/hide timezone in timestamps |
 
 Valid hook names: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`.
 

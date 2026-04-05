@@ -36,15 +36,18 @@ Commands:
 `/ticktock on` or `/ticktock off`:
 ```bash
 # on:
-jq '.enabled = true' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.enabled = true' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpfile" ~/.claude/ticktock.json
 # off:
-jq '.enabled = false' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.enabled = false' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpfile" ~/.claude/ticktock.json
 ```
 
 ### Set threshold
 `/ticktock threshold <seconds>`:
 ```bash
-jq '.thresholdSeconds = <seconds>' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.thresholdSeconds = <seconds>' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpfile" ~/.claude/ticktock.json
 ```
 
 ### Toggle individual hook
@@ -52,9 +55,11 @@ jq '.thresholdSeconds = <seconds>' ~/.claude/ticktock.json > /tmp/ticktock-cfg.t
 Valid hook names: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`
 ```bash
 # on:
-jq '.hooks.<HookName> = true' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.hooks.<HookName> = true' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpfile" ~/.claude/ticktock.json
 # off:
-jq '.hooks.<HookName> = false' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.hooks.<HookName> = false' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpfile" ~/.claude/ticktock.json
 ```
 
 ### Show timezone
@@ -62,7 +67,7 @@ jq '.hooks.<HookName> = false' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp &
 ```bash
 source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
 tz_val=$(ticktock_timezone)
-show_tz=$(ticktock_show_timezone && echo "true" || echo "false")
+if ticktock_show_timezone; then show_tz="true"; else show_tz="false"; fi
 resolved=$(ticktock_resolve_tz_offset)
 echo "timezone: ${tz_val}"
 echo "showTimezone: ${show_tz}"
@@ -76,12 +81,14 @@ Display the timezone setting, whether display is on/off, and the resolved UTC of
 To validate and set the timezone, run:
 ```bash
 source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
-normalized=$(ticktock_validate_timezone "<value>")
-if [ $? -eq 0 ]; then
-  jq --arg tz "$normalized" '.timezone = $tz' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+ticktock_ensure_config
+if normalized=$(ticktock_validate_timezone "<value>" 2>/dev/null); then
+  tmpfile=$(mktemp)
+  jq --arg tz "$normalized" '.timezone = $tz' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKTOCK_CONFIG"
   echo "Timezone set to: $normalized"
 else
-  echo "Error: $normalized"
+  error=$(ticktock_validate_timezone "<value>" 2>&1 || true)
+  echo "Error: $error"
 fi
 ```
 If validation fails, display the error and do not update the config.
@@ -89,16 +96,23 @@ If validation fails, display the error and do not update the config.
 ### Reset timezone to auto
 `/ticktock tz auto`:
 ```bash
-jq '.timezone = "auto"' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+ticktock_ensure_config
+tmpfile=$(mktemp)
+jq '.timezone = "auto"' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKTOCK_CONFIG"
 ```
 
 ### Toggle timezone display
 `/ticktock tz on` or `/ticktock tz off`:
 ```bash
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+ticktock_ensure_config
 # on:
-jq '.showTimezone = true' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.showTimezone = true' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKTOCK_CONFIG"
 # off:
-jq '.showTimezone = false' ~/.claude/ticktock.json > /tmp/ticktock-cfg.tmp && mv /tmp/ticktock-cfg.tmp ~/.claude/ticktock.json
+tmpfile=$(mktemp)
+jq '.showTimezone = false' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKTOCK_CONFIG"
 ```
 
 After any change, display the updated config to confirm.

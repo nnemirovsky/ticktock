@@ -24,12 +24,20 @@ hooks/
 skills/
   ticktock/
     SKILL.md           # /ticktock slash command (config, hook toggles, timezone)
+tests/
+  test-timezone.sh     # Automated tests for timezone functions
 docs/
   plans/               # Design and planning documents
     completed/         # Completed plans
 ```
 
 ## Testing
+
+Run automated tests:
+
+```bash
+bash tests/test-timezone.sh
+```
 
 Run hook handlers manually by setting the required environment variables:
 
@@ -38,6 +46,12 @@ CLAUDE_SESSION_ID=test bash hooks/handlers/user-prompt.sh
 CLAUDE_SESSION_ID=test bash hooks/handlers/session-start.sh
 CLAUDE_SESSION_ID=test bash hooks/handlers/pre-tool-use.sh
 CLAUDE_SESSION_ID=test bash hooks/handlers/post-tool-use.sh
+```
+
+Set `TICKTOCK_CONFIG` to override the config file path (useful for testing with isolated configs):
+
+```bash
+TICKTOCK_CONFIG=/tmp/test-config.json CLAUDE_SESSION_ID=test bash hooks/handlers/user-prompt.sh
 ```
 
 ## Version Bumps
