@@ -169,9 +169,9 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 **Files:**
 - Modify: `hooks/handlers/common.sh`
 
-- [ ] Update `ticktock_ensure_config()` default config to include `showTimezone` and `timezone` fields
-- [ ] Verify existing configs without these fields still work (backward compat via `// true` and `// "auto"` jq defaults)
-- [ ] Test: delete config, run a handler, verify new config has timezone fields
+- [x] Update `ticktock_ensure_config()` default config to include `showTimezone` and `timezone` fields
+- [x] Verify existing configs without these fields still work (backward compat via `// true` and `// "auto"` jq defaults)
+- [x] Test: delete config, run a handler, verify new config has timezone fields
 
 ### Task 5: Update /ticktock skill with tz subcommands
 

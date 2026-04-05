@@ -20,7 +20,9 @@ ticktock_ensure_config() {
     "PreToolUse": true,
     "PostToolUse": true
   },
-  "thresholdSeconds": 30
+  "thresholdSeconds": 30,
+  "showTimezone": true,
+  "timezone": "auto"
 }
 CONF
   fi
