@@ -193,14 +193,14 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 **Files:**
 - (no file changes, verification only)
 
-- [ ] Verify default behavior: no config changes needed, timezone auto-detected and shown as UTC offset
-- [ ] Verify manual IANA timezone with case-insensitive input
-- [ ] Verify manual UTC offset
-- [ ] Verify `tz off` hides timezone, `tz on` shows it
-- [ ] Verify `tz auto` reverts to system timezone
-- [ ] Verify backward compatibility: old config without timezone fields works
-- [ ] Verify session-start output includes timezone
-- [ ] Run all four handlers end-to-end: `CLAUDE_SESSION_ID=test bash hooks/handlers/{session-start,user-prompt,pre-tool-use,post-tool-use}.sh`
+- [x] Verify default behavior: no config changes needed, timezone auto-detected and shown as UTC offset
+- [x] Verify manual IANA timezone with case-insensitive input
+- [x] Verify manual UTC offset
+- [x] Verify `tz off` hides timezone, `tz on` shows it
+- [x] Verify `tz auto` reverts to system timezone
+- [x] Verify backward compatibility: old config without timezone fields works
+- [x] Verify session-start output includes timezone
+- [x] Run all four handlers end-to-end: `CLAUDE_SESSION_ID=test bash hooks/handlers/{session-start,user-prompt,pre-tool-use,post-tool-use}.sh`
 
 ### Task 7: [Final] Update documentation
 
@@ -208,8 +208,8 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 - Modify: `CLAUDE.md` (if needed)
 - Move: `docs/plans/20260405-timezone-support.md` -> `docs/plans/completed/`
 
-- [ ] Update CLAUDE.md if new patterns discovered
-- [ ] Move this plan to `docs/plans/completed/`
+- [x] Update CLAUDE.md if new patterns discovered
+- [x] Move this plan to `docs/plans/completed/`
 
 ## Post-Completion
 

@@ -16,12 +16,17 @@ Claude Code plugin that provides time awareness by injecting timestamps and elap
 hooks/
   hooks.json           # Hook definitions (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse)
   handlers/
+    common.sh          # Shared library (config, elapsed, timezone, formatting)
     session-start.sh   # Runs on session startup/resume/clear/compact
     user-prompt.sh     # Runs when the user submits a prompt
     pre-tool-use.sh    # Runs before a tool is invoked
     post-tool-use.sh   # Runs after a tool completes
+skills/
+  ticktock/
+    SKILL.md           # /ticktock slash command (config, hook toggles, timezone)
 docs/
   plans/               # Design and planning documents
+    completed/         # Completed plans
 ```
 
 ## Testing
