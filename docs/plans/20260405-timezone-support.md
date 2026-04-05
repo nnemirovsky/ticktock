@@ -178,15 +178,15 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 **Files:**
 - Modify: `skills/ticktock/SKILL.md`
 
-- [ ] Add `tz` subcommand documentation and handling instructions
-- [ ] Add `/ticktock tz` (no args) to show current timezone setting and resolved offset
-- [ ] Add `/ticktock tz <value>` to set timezone with validation (call validation function via bash)
-- [ ] Add `/ticktock tz auto` to reset timezone to auto-detect
-- [ ] Add `/ticktock tz on|off` to toggle `showTimezone`
-- [ ] Update the skill's argument-hint frontmatter to include tz options
-- [ ] Update the commands list shown when running `/ticktock` with no args
-- [ ] Test: verify embedded bash commands in SKILL.md work when run manually (jq config updates)
-- [ ] Note: full `/ticktock tz` integration test requires a live Claude Code session (see Post-Completion)
+- [x] Add `tz` subcommand documentation and handling instructions
+- [x] Add `/ticktock tz` (no args) to show current timezone setting and resolved offset
+- [x] Add `/ticktock tz <value>` to set timezone with validation (call validation function via bash)
+- [x] Add `/ticktock tz auto` to reset timezone to auto-detect
+- [x] Add `/ticktock tz on|off` to toggle `showTimezone`
+- [x] Update the skill's argument-hint frontmatter to include tz options
+- [x] Update the commands list shown when running `/ticktock` with no args
+- [x] Test: verify embedded bash commands in SKILL.md work when run manually (jq config updates)
+- [x] Note: full `/ticktock tz` integration test requires a live Claude Code session (skipped - not automatable)
 
 ### Task 6: Verify acceptance criteria
 
