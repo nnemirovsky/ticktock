@@ -133,17 +133,17 @@ Accept formats: `UTC+3`, `UTC-7`, `UTC+5:30`, `UTC-05:30`, `utc+3` (case-insensi
 - Modify: `hooks/handlers/common.sh`
 - Modify: `hooks/handlers/session-start.sh`
 
-- [ ] Update `ticktock_emit()` to append timezone offset after the time when `showTimezone` is true
+- [x] Update `ticktock_emit()` to append timezone offset after the time when `showTimezone` is true
   - Format: `[14:32:15 UTC-7]` or `[14:32:15 UTC-7 | +3m25s]`
-- [ ] Update `ticktock_emit()` to use `TZ="$(ticktock_tz_value)"` so date commands respect configured timezone
-- [ ] Update `session-start.sh` to append timezone to the session start message
+- [x] Update `ticktock_emit()` to use `TZ="$(ticktock_tz_value)"` so date commands respect configured timezone
+- [x] Update `session-start.sh` to append timezone to the session start message
   - Format: `[Session started: 2026-04-05 14:30:00 UTC-7]`
-- [ ] Update `session-start.sh` to use `TZ="$(ticktock_tz_value)"` for date commands
-- [ ] Verify `session-start.sh` JSON output structure remains valid (pipe output through `jq .` to validate)
-- [ ] Test: run all four handlers and verify timezone appears in output
-- [ ] Test: set `showTimezone: false` and verify timezone is hidden
-- [ ] Test: set a manual IANA timezone and verify output uses that timezone's offset
-- [ ] Run tests: all handlers must pass before next task
+- [x] Update `session-start.sh` to use `TZ="$(ticktock_tz_value)"` for date commands
+- [x] Verify `session-start.sh` JSON output structure remains valid (pipe output through `jq .` to validate)
+- [x] Test: run all four handlers and verify timezone appears in output
+- [x] Test: set `showTimezone: false` and verify timezone is hidden
+- [x] Test: set a manual IANA timezone and verify output uses that timezone's offset
+- [x] Run tests: all handlers must pass before next task
 
 ### Task 3: Add case-insensitive IANA timezone validation
 

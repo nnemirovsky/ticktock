@@ -7,13 +7,30 @@ if ! ticktock_is_enabled "SessionStart"; then
 fi
 
 ticktock_save_timestamp
-NOW=$(date +"%Y-%m-%d %H:%M:%S")
+
+# Resolve timezone for date commands
+tz_val=$(ticktock_tz_value)
+
+if [ -n "$tz_val" ]; then
+  NOW=$(TZ="$tz_val" date +"%Y-%m-%d %H:%M:%S")
+else
+  NOW=$(date +"%Y-%m-%d %H:%M:%S")
+fi
+
+# Build timezone suffix if enabled
+tz_suffix=""
+if ticktock_show_timezone; then
+  tz_display=$(ticktock_resolve_tz_offset)
+  if [ -n "$tz_display" ]; then
+    tz_suffix=" ${tz_display}"
+  fi
+fi
 
 cat << EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "[Session started: ${NOW}]"
+    "additionalContext": "[Session started: ${NOW}${tz_suffix}]"
   }
 }
 EOF

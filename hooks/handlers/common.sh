@@ -216,26 +216,44 @@ ticktock_emit() {
     exit 0
   fi
 
+  # Resolve timezone for date commands
+  local tz_val
+  tz_val=$(ticktock_tz_value)
+
   local now_epoch
   now_epoch=$(date +%s)
   local now_time
-  now_time=$(date +"%H:%M:%S")
+  if [ -n "$tz_val" ]; then
+    now_time=$(TZ="$tz_val" date +"%H:%M:%S")
+  else
+    now_time=$(date +"%H:%M:%S")
+  fi
   local threshold
   threshold=$(ticktock_threshold)
   local last
   last=$(ticktock_last_timestamp)
 
+  # Build timezone suffix if enabled
+  local tz_suffix=""
+  if ticktock_show_timezone; then
+    local tz_display
+    tz_display=$(ticktock_resolve_tz_offset)
+    if [ -n "$tz_display" ]; then
+      tz_suffix=" ${tz_display}"
+    fi
+  fi
+
   local output
   if [ -z "$last" ]; then
-    output="[${now_time}]"
+    output="[${now_time}${tz_suffix}]"
   else
     local elapsed=$((now_epoch - last))
     if [ "$elapsed" -ge "$threshold" ]; then
       local formatted
       formatted=$(ticktock_format_elapsed "$elapsed")
-      output="[${now_time} | +${formatted}]"
+      output="[${now_time}${tz_suffix} | +${formatted}]"
     else
-      output="[${now_time}]"
+      output="[${now_time}${tz_suffix}]"
     fi
   fi
 
