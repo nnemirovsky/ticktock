@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# ticktock common library — sourced by all hook handlers
+# ticktock — the single hook handler, also sourced by the /ticktock skill
 # Provides: config reading, elapsed computation, timestamp formatting
+#
+# Every hook in hooks.json points at this file. Run directly, it reads the hook
+# event from stdin (or from $1 when run by hand) and emits that hook's output.
+# Sourced, it only defines the functions.
 
 set -euo pipefail
 
@@ -405,3 +409,63 @@ ticktock_emit() {
   ticktock_save_timestamp
   echo "$output"
 }
+
+# SessionStart output — absolute date and time as additionalContext JSON
+ticktock_session_start() {
+  if ! ticktock_is_enabled "SessionStart"; then
+    return 0
+  fi
+
+  ticktock_save_timestamp
+
+  # Resolve timezone for date commands
+  local tz_val
+  tz_val=$(ticktock_tz_value)
+
+  # When tz_val is empty (auto mode), do not set TZ at all.
+  # On macOS, TZ="" resolves to UTC rather than the local timezone.
+  local now
+  if [ -n "$tz_val" ]; then
+    now=$(TZ="$tz_val" date +"%Y-%m-%d %H:%M:%S")
+  else
+    now=$(date +"%Y-%m-%d %H:%M:%S")
+  fi
+
+  local tz_suffix
+  tz_suffix=$(ticktock_tz_suffix)
+
+  cat << EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "[Session started: ${now}${tz_suffix}]"
+  }
+}
+EOF
+}
+
+# Entry point when run as a hook
+# Args: $1 = hook event name, optional. Defaults to hook_event_name from stdin.
+ticktock_main() {
+  local input="" event="${1:-}"
+  if [ ! -t 0 ]; then
+    input=$(cat 2>/dev/null || true)
+  fi
+  if [ -z "$event" ] && [ -n "$input" ]; then
+    event=$(printf '%s' "$input" | jq -r '.hook_event_name // empty' 2>/dev/null || true)
+  fi
+
+  case "$event" in
+    SessionStart)
+      ticktock_session_start
+      ;;
+    UserPromptSubmit|PreToolUse|PostToolUse)
+      ticktock_emit "$event"
+      ;;
+  esac
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  ticktock_main "$@"
+  exit 0
+fi
