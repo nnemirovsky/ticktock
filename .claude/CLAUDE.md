@@ -56,8 +56,8 @@ TICKTOCK_CONFIG=/tmp/test-config.json CLAUDE_SESSION_ID=test bash hooks/handlers
 
 - Hook commands point straight at `ticktock.sh` by a literal path. A hook script that
   runs or sources another file puts the plugin on a policy hold for manual review.
-- No here-documents fed to a program (`cat << EOF`) in hook scripts. Build JSON with
-  `jq -n` instead. Here-documents also put the plugin on a policy hold.
+- No here-documents, here-strings or multi-line literals fed to a program in hook
+  scripts. Build JSON with one-line `jq -n` filters. These also cause a policy hold.
 - No text file may name the listing icon or any other image or font. That also
   triggers a policy hold.
 
