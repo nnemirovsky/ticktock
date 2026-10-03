@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# ticktock — the single hook handler, also sourced by the /ticktock skill
+# ticktock — the single hook handler, also loaded as a library by the /ticktock skill
 # Provides: config reading, elapsed computation, timestamp formatting
 #
 # Every hook in hooks.json points at this file. Run directly, it reads the hook
 # event from stdin (or from $1 when run by hand) and emits that hook's output.
-# Sourced, it only defines the functions.
+# Loaded as a library, it only defines the functions.
 
 set -euo pipefail
 
@@ -15,20 +15,9 @@ TICKTOCK_DEFAULT_THRESHOLD=30
 ticktock_ensure_config() {
   if [ ! -f "$TICKTOCK_CONFIG" ]; then
     mkdir -p "$(dirname "$TICKTOCK_CONFIG")"
-    # jq rather than a here-document: the plugin directory validator holds any
-    # hook script that feeds a here-document to a program.
-    jq -n '{
-      enabled: true,
-      hooks: {
-        SessionStart: true,
-        UserPromptSubmit: true,
-        PreToolUse: true,
-        PostToolUse: true
-      },
-      thresholdSeconds: 30,
-      showTimezone: true,
-      timezone: "auto"
-    }' > "$TICKTOCK_CONFIG"
+    # One-line jq filter: the plugin directory validator holds hook scripts that
+    # hand a multi-line document to a program.
+    jq -n '{enabled: true, hooks: {SessionStart: true, UserPromptSubmit: true, PreToolUse: true, PostToolUse: true}, thresholdSeconds: 30, showTimezone: true, timezone: "auto"}' > "$TICKTOCK_CONFIG"
   fi
 }
 
@@ -111,7 +100,7 @@ ticktock_normalize_iana() {
   # Split input on "/" into components
   local IFS="/"
   local -a parts
-  read -ra parts <<< "$input"
+  read -ra parts < <(printf '%s\n' "$input")
 
   local base="$zoneinfo"
   for part in "${parts[@]}"; do
