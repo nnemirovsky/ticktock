@@ -1,5 +1,23 @@
 {
   "name": "ticktock",
-  "version": "0.2.0",
-  "description": "Time awareness for Claude Code — injects timestamps and elapsed time into context via hooks"
+  "version": "0.2.1",
+  "description": "Time awareness for Claude Code — injects timestamps and elapsed time into context via hooks",
+  "author": {
+    "name": "Nikita Nemirovsky",
+    "url": "https://github.com/nnemirovsky"
+  },
+  "homepage": "https://github.com/nnemirovsky/ticktock",
+  "repository": "https://github.com/nnemirovsky/ticktock",
+  "documentationUrl": "https://github.com/nnemirovsky/ticktock#readme",
+  "supportUrl": "https://github.com/nnemirovsky/ticktock/issues",
+  "privacyPolicyUrl": "https://github.com/nnemirovsky/ticktock/blob/main/PRIVACY.md",
+  "license": "MIT",
+  "keywords": [
+    "time",
+    "timestamps",
+    "elapsed-time",
+    "timezone",
+    "context",
+    "hooks"
+  ]
 }

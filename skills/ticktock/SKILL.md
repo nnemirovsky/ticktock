@@ -65,7 +65,7 @@ jq '.hooks.<HookName> = false' ~/.claude/ticktock.json > "$tmpfile" && mv "$tmpf
 ### Show timezone
 `/ticktock tz` (no additional arguments):
 ```bash
-source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/ticktock.sh"
 tz_val=$(ticktock_timezone)
 if ticktock_show_timezone; then show_tz="true"; else show_tz="false"; fi
 resolved=$(ticktock_resolve_tz_offset)
@@ -80,7 +80,7 @@ Display the timezone setting, whether display is on/off, and the resolved UTC of
 
 To validate and set the timezone, run:
 ```bash
-source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/ticktock.sh"
 ticktock_ensure_config
 if normalized=$(ticktock_validate_timezone "<value>" 2>/dev/null); then
   tmpfile=$(mktemp)
@@ -96,7 +96,7 @@ If validation fails, display the error and do not update the config.
 ### Reset timezone to auto
 `/ticktock tz auto`:
 ```bash
-source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/ticktock.sh"
 ticktock_ensure_config
 tmpfile=$(mktemp)
 jq '.timezone = "auto"' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKTOCK_CONFIG"
@@ -105,7 +105,7 @@ jq '.timezone = "auto"' "$TICKTOCK_CONFIG" > "$tmpfile" && mv "$tmpfile" "$TICKT
 ### Toggle timezone display
 `/ticktock tz on` or `/ticktock tz off`:
 ```bash
-source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/common.sh"
+source "${CLAUDE_PLUGIN_ROOT}/hooks/handlers/ticktock.sh"
 ticktock_ensure_config
 # on:
 tmpfile=$(mktemp)

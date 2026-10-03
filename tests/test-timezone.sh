@@ -6,7 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-COMMON_SH="${REPO_DIR}/hooks/handlers/common.sh"
+TICKTOCK_SH="${REPO_DIR}/hooks/handlers/ticktock.sh"
 
 # Use a temporary config to avoid touching real config
 TEST_CONFIG=$(mktemp)
@@ -50,12 +50,12 @@ assert_fail() {
   fi
 }
 
-# Set TICKTOCK_CONFIG before sourcing so common.sh picks it up at init time
+# Set TICKTOCK_CONFIG before sourcing so ticktock.sh picks it up at init time
 export TICKTOCK_CONFIG="$TEST_CONFIG"
 export CLAUDE_SESSION_ID="test-tz"
 
-# Source common.sh (sets set -euo pipefail, defines all functions)
-source "$COMMON_SH"
+# Source ticktock.sh (sets set -euo pipefail, defines all functions)
+source "$TICKTOCK_SH"
 
 write_config() {
   cat > "$TEST_CONFIG" << EOF
@@ -314,9 +314,9 @@ echo "--- handler integration ---"
 
 write_config "true" "auto"
 
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rc=$?
-assert_ok "user-prompt.sh exits 0" "$rc"
+assert_ok "UserPromptSubmit exits 0" "$rc"
 # Output should match: [HH:MM:SS UTC+/-N] or [HH:MM:SS UTC+/-N:MM] or [HH:MM:SS UTC] optionally with elapsed suffix
 if [[ "$output" =~ ^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\ UTC([+-][0-9]+(:[0-9]{2})?)?(\ \|\ \+[0-9]+[hms0-9]*)?\]$ ]]; then
   passed=$((passed + 1))
@@ -325,12 +325,12 @@ else
   errors+=("  FAIL: user-prompt output format (expected [HH:MM:SS UTC...]), got: '${output}'")
 fi
 
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/session-start.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" SessionStart </dev/null 2>&1)
 rc=$?
-assert_ok "session-start.sh exits 0" "$rc"
+assert_ok "SessionStart exits 0" "$rc"
 # Validate JSON
 echo "$output" | jq . > /dev/null 2>&1
-assert_ok "session-start.sh valid JSON" "$?"
+assert_ok "SessionStart valid JSON" "$?"
 # Verify additionalContext contains timezone suffix
 additional=$(echo "$output" | jq -r '.hookSpecificOutput.additionalContext // ""')
 if [[ "$additional" =~ UTC ]]; then
@@ -344,9 +344,9 @@ fi
 echo "--- IANA integration ---"
 
 write_config "true" "America/New_York"
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rc=$?
-assert_ok "user-prompt.sh with IANA tz exits 0" "$rc"
+assert_ok "UserPromptSubmit with IANA tz exits 0" "$rc"
 # Resolve expected offset for America/New_York
 ny_display=$(_ticktock_offset_to_display "$(TZ="America/New_York" date +%z)")
 if [[ "$output" == *"$ny_display"* ]]; then
@@ -367,7 +367,7 @@ _hms_to_sec() {
 echo "--- wall clock assertion ---"
 
 write_config "true" "America/New_York"
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 # Extract HH:MM:SS from output
 rendered_time=$(echo "$output" | sed 's/^\[\([0-9][0-9]:[0-9][0-9]:[0-9][0-9]\).*/\1/')
 expected_time=$(TZ="America/New_York" date +%H:%M:%S)
@@ -387,7 +387,7 @@ fi
 
 # Wall clock assertion for auto mode: verify it uses local time, not UTC
 write_config "true" "auto"
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rendered_time=$(echo "$output" | sed 's/^\[\([0-9][0-9]:[0-9][0-9]:[0-9][0-9]\).*/\1/')
 expected_time=$(date +%H:%M:%S)
 rendered_sec=$(_hms_to_sec "$rendered_time")
@@ -406,21 +406,21 @@ fi
 echo "--- showTimezone false integration ---"
 
 write_config "false" "auto"
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rc=$?
-assert_ok "user-prompt.sh with showTimezone false exits 0" "$rc"
+assert_ok "UserPromptSubmit with showTimezone false exits 0" "$rc"
 # Output should be a timestamp without any UTC reference
 if [[ "$output" =~ ^\[[0-9]{2}:[0-9]{2}:[0-9]{2}(\ \|\ \+[0-9]+[hms0-9]*)?\]$ ]]; then
   passed=$((passed + 1))
 else
   failed=$((failed + 1))
-  errors+=("  FAIL: user-prompt showTimezone false has unexpected format, got: '${output}'")
+  errors+=("  FAIL: UserPromptSubmit showTimezone false has unexpected format, got: '${output}'")
 fi
 if [[ "$output" != *"UTC"* ]]; then
   passed=$((passed + 1))
 else
   failed=$((failed + 1))
-  errors+=("  FAIL: user-prompt showTimezone false should not contain UTC, got: '${output}'")
+  errors+=("  FAIL: UserPromptSubmit showTimezone false should not contain UTC, got: '${output}'")
 fi
 
 # --- _ticktock_classify_tz ---
@@ -518,9 +518,9 @@ echo "--- pre/post tool-use integration ---"
 
 write_config "true" "auto"
 
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/pre-tool-use.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" PreToolUse </dev/null 2>&1)
 rc=$?
-assert_ok "pre-tool-use.sh exits 0" "$rc"
+assert_ok "PreToolUse exits 0" "$rc"
 if [[ "$output" =~ ^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\ UTC([+-][0-9]+(:[0-9]{2})?)?(\ \|\ \+[0-9]+[hms0-9]*)?\]$ ]]; then
   passed=$((passed + 1))
 else
@@ -528,9 +528,9 @@ else
   errors+=("  FAIL: pre-tool-use output format (expected [HH:MM:SS UTC...]), got: '${output}'")
 fi
 
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/post-tool-use.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" PostToolUse </dev/null 2>&1)
 rc=$?
-assert_ok "post-tool-use.sh exits 0" "$rc"
+assert_ok "PostToolUse exits 0" "$rc"
 if [[ "$output" =~ ^\[[0-9]{2}:[0-9]{2}:[0-9]{2}\ UTC([+-][0-9]+(:[0-9]{2})?)?(\ \|\ \+[0-9]+[hms0-9]*)?\]$ ]]; then
   passed=$((passed + 1))
 else
@@ -543,7 +543,7 @@ fi
 echo "--- error path tests ---"
 
 # Empty CLAUDE_SESSION_ID should still work (falls back to "default")
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID="" bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID="" bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rc=$?
 assert_ok "user-prompt with empty session ID exits 0" "$rc"
 # Output should still be a bracketed timestamp
@@ -558,7 +558,7 @@ fi
 cat > "$TEST_CONFIG" << 'EOF'
 { this is not valid json
 EOF
-output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "${REPO_DIR}/hooks/handlers/user-prompt.sh" 2>&1)
+output=$(TICKTOCK_CONFIG="$TEST_CONFIG" CLAUDE_SESSION_ID=test-tz bash "$TICKTOCK_SH" UserPromptSubmit </dev/null 2>&1)
 rc=$?
 # Handler should still exit 0 (graceful degradation via jq defaults)
 assert_ok "user-prompt with corrupted config exits 0" "$rc"
