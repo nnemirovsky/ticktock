@@ -15,20 +15,20 @@ TICKTOCK_DEFAULT_THRESHOLD=30
 ticktock_ensure_config() {
   if [ ! -f "$TICKTOCK_CONFIG" ]; then
     mkdir -p "$(dirname "$TICKTOCK_CONFIG")"
-    cat > "$TICKTOCK_CONFIG" << 'CONF'
-{
-  "enabled": true,
-  "hooks": {
-    "SessionStart": true,
-    "UserPromptSubmit": true,
-    "PreToolUse": true,
-    "PostToolUse": true
-  },
-  "thresholdSeconds": 30,
-  "showTimezone": true,
-  "timezone": "auto"
-}
-CONF
+    # jq rather than a here-document: the plugin directory validator holds any
+    # hook script that feeds a here-document to a program.
+    jq -n '{
+      enabled: true,
+      hooks: {
+        SessionStart: true,
+        UserPromptSubmit: true,
+        PreToolUse: true,
+        PostToolUse: true
+      },
+      thresholdSeconds: 30,
+      showTimezone: true,
+      timezone: "auto"
+    }' > "$TICKTOCK_CONFIG"
   fi
 }
 
@@ -434,14 +434,8 @@ ticktock_session_start() {
   local tz_suffix
   tz_suffix=$(ticktock_tz_suffix)
 
-  cat << EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "[Session started: ${now}${tz_suffix}]"
-  }
-}
-EOF
+  jq -n --arg ctx "[Session started: ${now}${tz_suffix}]" \
+    '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
 }
 
 # Entry point when run as a hook
