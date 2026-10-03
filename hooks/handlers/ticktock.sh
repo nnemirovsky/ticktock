@@ -455,6 +455,12 @@ ticktock_main() {
     event=$(printf '%s' "$input" | jq -r '.hook_event_name // empty' 2>/dev/null || true)
   fi
 
+  # Claude Code passes the session id on stdin and never sets CLAUDE_SESSION_ID,
+  # so without this every session shares one "default" timestamp file.
+  if [ -z "${CLAUDE_SESSION_ID:-}" ] && [ -n "$input" ]; then
+    CLAUDE_SESSION_ID=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null || true)
+  fi
+
   case "$event" in
     SessionStart)
       ticktock_session_start
