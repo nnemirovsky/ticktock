@@ -10,7 +10,7 @@ Load the plugin from a working tree instead of through the marketplace:
 claude --plugin-dir /path/to/ticktock
 ```
 
-Every Claude Code restart re-reads the plugin from disk, with no `/plugin install` and no marketplace cache to flush. Hooks load at session start, so a change to `hooks/hooks.json` or to a handler needs a restart before it takes effect.
+Every Claude Code restart re-reads the plugin from disk, with no `/plugin install` and no marketplace cache to flush. A change to `hooks/hooks.json` needs a restart before it takes effect. `hooks/handlers/ticktock.sh` runs from disk on every hook, so an edit to it applies at once.
 
 ## Tests
 
