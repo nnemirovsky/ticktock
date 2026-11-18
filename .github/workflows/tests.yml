@@ -1,0 +1,43 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin:
+    # The job name is the required status check in the "Protect main" ruleset.
+    # Rename both together, or PRs wait forever for a check that never reports.
+    name: validate and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: validate the manifest
+        run: claude plugin validate .
+
+      # `claude plugin test` runs a hooks module's tests, and ticktock has
+      # none: its hook is a bash script with its own test script.
+      - name: run the tests
+        run: bash tests/test-timezone.sh
+
+      - name: check the shell scripts
+        run: |
+          git ls-files -z '*.sh' | xargs -0 -n1 bash -n
+          git ls-files -z '*.sh' | xargs -0 shellcheck --severity=error
